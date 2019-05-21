@@ -2,7 +2,8 @@ const {
   throttle,
   switchLates,
   distinctUntilChanged,
-  takeUntil
+  takeUntil,
+  doAction
 } = rxjs.operators;
 var Observable = Rx.Observable;
 var textbox = document.getElementById("textbox");
@@ -23,11 +24,12 @@ var searchButtonClicks = Observable.fromEvent(searchButton, "click");
 //   });
 // }
 
-searchButtonClicks.forEach(function() {
-  console.log("hello");
-
+var searchFormOpens = searchButtonClicks.doAction(function onNext() {
   document.getElementById("searchForm").style.display = "block";
 });
+// searchButtonClicks.forEach(function() {
+//   document.getElementById("searchForm").style.display = "block";
+// });
 
 function getWikipediaSearchResults(term) {
   return Observable.create(function(obsever) {
@@ -52,12 +54,15 @@ function getWikipediaSearchResults(term) {
 // getWikipediaSearchResults("Terminator").forEach(result => console.log(result));
 
 //20 seconds
-var searchResultsSets = searchButtonClicks
+var searchResultsSets = searchFormOpens
   .map(function() {
     var closeButtonClicks = Observable.fromEvent(
       document.getElementById("closeButton"),
       "click"
     );
+    var searchFormCloses = closeButtonClicks.doAction(function() {
+      document.getElementById("searchForm").style.display = "none";
+    });
     return (
       keypresses
         // {..'a'.....'b'....'c'....'d'...
@@ -83,7 +88,7 @@ var searchResultsSets = searchButtonClicks
         //concat {.........["aardvark","abacus"]........................["abacus"] waiting the first (a)
         //swtich {................................["abacus"]..........} stop listening the first (a)
         .switchLatest()
-        .takeUntil(closeButtonClicks)
+        .takeUntil(searchFormCloses)
     );
   })
   .switchLatest();
