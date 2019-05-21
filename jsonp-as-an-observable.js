@@ -1,8 +1,15 @@
-const { throttle, switchLates } = rxjs.operators;
+const {
+  throttle,
+  switchLates,
+  distinctUntilChanged,
+  takeUntil
+} = rxjs.operators;
 var Observable = Rx.Observable;
 var textbox = document.getElementById("textbox");
 var keypresses = Observable.fromEvent(textbox, "keypress");
 var results = document.getElementById("results");
+var searchButton = document.getElementById("searchButton");
+var searchButtonClicks = Observable.fromEvent(searchButton, "click");
 
 // keypresses.forEach(keypress => console.log(keypress));
 
@@ -15,6 +22,12 @@ var results = document.getElementById("results");
 //     console.log(data);
 //   });
 // }
+
+searchButtonClicks.forEach(function() {
+  console.log("hello");
+
+  document.getElementById("searchForm").style.display = "block";
+});
 
 function getWikipediaSearchResults(term) {
   return Observable.create(function(obsever) {
@@ -39,22 +52,46 @@ function getWikipediaSearchResults(term) {
 // getWikipediaSearchResults("Terminator").forEach(result => console.log(result));
 
 //20 seconds
-var searchResultsSets = keypresses
-  // {..'a'.....'b'....'c'....'d'...
-  .throttle(20)
-  //{..............b.............d.......
-  .map(key => {
-    return getWikipediaSearchResults(textbox.value);
+var searchResultsSets = searchButtonClicks
+  .map(function() {
+    var closeButtonClicks = Observable.fromEvent(
+      document.getElementById("closeButton"),
+      "click"
+    );
+    return (
+      keypresses
+        // {..'a'.....'b'....'c'....'d'...
+        .throttle(20)
+        //{..............b.............d.......
+        .map(key => {
+          return textbox.value;
+        })
+        //{.........'ab'...........'ab'...........'abc'.....
+        .distinctUntilChanged()
+        //{.........'ab'..........................'abc'.......
+        .filter(search => {
+          return search.trim().length > 0;
+        })
+        .map(search => {
+          return getWikipediaSearchResults(search).retry(3);
+        })
+        //{
+        // .......{........["aardvark","abacus"]} "we press a first"
+        // .............{........................["abacus"]}  "we press b"
+        //}
+        // merge {.........["aardvark","abacus"]..["abacus"].......    show both (a b), if first much time than second, merge will show the second and then first
+        //concat {.........["aardvark","abacus"]........................["abacus"] waiting the first (a)
+        //swtich {................................["abacus"]..........} stop listening the first (a)
+        .switchLatest()
+        .takeUntil(closeButtonClicks)
+    );
   })
-  //{
-  // .......{........["aardvark","abacus"]} "we press a first"
-  // .............{........................["abacus"]}  "we press b"
-  //}
-  // merge {.........["aardvark","abacus"]..["abacus"].......    show both (a b), if first much time than second, merge will show the second and then first
-  //concat {.........["aardvark","abacus"]........................["abacus"] waiting the first (a)
-  //swtich {................................["abacus"]..........} stop listening the first (a)
   .switchLatest();
-
-searchResultsSets.forEach(resultSet => {
-  results.value = JSON.stringify(resultSet);
-});
+searchResultsSets.forEach(
+  resultSet => {
+    results.value = JSON.stringify(resultSet);
+  },
+  function(error) {
+    alert("not working, try again later");
+  }
+);

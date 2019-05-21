@@ -4,13 +4,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>Phu Chau</title>
+  </head>
+  <body>
+    <button id="searchButton">Search</button>
+    <div id="searchForm" style="display: none">
+      <input type="text" id="textbox" />
+      <textarea id="results" name="message" rows="10" cols="30"></textarea>
+      <button id="closeButton">close</button>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/4.0.6/rx.all.js"></script>
     <script src="https://unpkg.com/rxjs/bundles/rxjs.umd.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
-  </head>
-  <body>
-    <input id="textbox" />
-    <textarea id="results" name="message" rows="10" cols="30"></textarea>
     <script src="jsonp-as-an-observable.js"></script>
   </body>
 </html>
