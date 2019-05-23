@@ -53,6 +53,31 @@ Observable.prototype = {
         }
       );
     });
+  },
+
+  take: function(num) {
+    var self = this;
+    //take observable
+    return new Observable(function forEach(observer) {
+      var counter = 0,
+        subscription = self.forEach(
+          function onNext(v) {
+            observer.onNext(v);
+            counter++;
+            if (counter === num) {
+              observer.onCompleted();
+              subscription.dispose();
+            }
+          },
+          function onError(e) {
+            observer.onError(e);
+          },
+          function onCompleted() {
+            observer.onCompleted();
+          }
+        );
+      return subscription;
+    });
   }
 };
 
