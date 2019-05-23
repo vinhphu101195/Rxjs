@@ -70,3 +70,13 @@ Observable.fromEvent = function(dom, eventName) {
     };
   });
 };
+
+var button = document.getElementById("button");
+
+var clicks = Observable.fromEvent(button, "click")
+  .filter(e => e.pageX > 35)
+  .map(e => e.pageX + "px");
+
+clicks.forEach(x => {
+  console.log(x);
+});
