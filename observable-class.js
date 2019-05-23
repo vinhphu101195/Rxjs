@@ -18,11 +18,32 @@ Observable.prototype = {
   map: function(projectionFunction) {
     var self = this;
     //mapped observable
-    return new Observable(function forEach(Observer) {
+    return new Observable(function forEach(observer) {
       // self here is forEach above
       return self.forEach(
         function onNext(x) {
           observer.onNext(projectionFunction(x));
+        },
+        function onError(e) {
+          observer.onError(e);
+        },
+        function onCompleted() {
+          observer.onCompleted();
+        }
+      );
+    });
+  },
+
+  filter: function(testFunction) {
+    var self = this;
+    //filter observable
+    return new Observable(function forEach(observer) {
+      // self here is forEach above
+      return self.forEach(
+        function onNext(x) {
+          if (testFunction(x)) {
+            observer.onNext(x);
+          }
         },
         function onError(e) {
           observer.onError(e);
