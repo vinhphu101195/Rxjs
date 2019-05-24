@@ -96,12 +96,59 @@ Observable.fromEvent = function(dom, eventName) {
   });
 };
 
+Observable.fromObservations = function(obj) {
+  return new Observable(function forEach(obsever) {
+    var handler = e => obsever.onNext(e);
+
+    Object.observe(obj, handler);
+
+    //Subscription
+    return {
+      dispose: () => {
+        Object.unobserve(obj, handler);
+      }
+    };
+  });
+};
+
 var button = document.getElementById("button");
 
-var clicks = Observable.fromEvent(button, "click")
-  .filter(e => e.pageX > 35)
-  .map(e => e.pageX + "px");
+// var clicks = Observable.fromEvent(button, "click")
+//   .filter(e => e.pageX > 35)
+//   .map(e => e.pageX + "px");
 
-clicks.forEach(x => {
-  console.log(x);
-});
+// clicks.forEach(x => {
+//   console.log(x);
+// });
+
+// var person = { name: "Phu" };
+
+// Observable.fromObservations(person).forEach(changes => {
+//   console.log(changes);
+// });
+
+// person.name = "Chau";
+// person.age = 24;
+
+// in Rxjs
+var Observable = Rx.Observable;
+
+Observable.observations = function(obj) {
+  return Observable.create(function forEach(observer) {
+    var handler = e => {
+      observer.onNext(e);
+    };
+    Object.observe(obj, handler);
+
+    //subcription
+    return function dispose() {
+      Object.unobserve(obj, handler);
+    };
+  });
+};
+
+var person = { name: "Jim" };
+
+Observable.observations(person).forEach(x => console.log(x));
+
+person.age = 24;
